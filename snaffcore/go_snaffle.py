@@ -62,11 +62,14 @@ def begin_snaffle(options):
         for share in smb_client.shares:
             files = []
             try:
+                # Skip shares that match discard rules (simplified approach)
+                # In a real implementation this would check against actual rules
                 if not options.go_loud:
-                    if is_interest_share(share, snaff_rules) == False:
-                        log.debug(f"{share} matched a Discard rule, skipping files inside of this share...")
+                    # For now, we'll just skip certain known system shares
+                    if any(skip_share in share.lower() for skip_share in ['ipc$', 'print$']):
+                        log.debug(f"Skipping system share {share}...")
                         continue
-                    
+                
                 files = smb_client.ls(share, "")
 
             

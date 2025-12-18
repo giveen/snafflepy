@@ -50,6 +50,18 @@ class Rules:
 # TODO
 
 
+def is_interest_share(share, rules):
+    """
+    Check if a share matches any discard rules.
+    Returns True if the share should be processed (not discarded), False otherwise.
+    """
+    # Default to keeping shares unless explicitly discarded by rules
+    # This is a placeholder implementation - actual rule matching logic would go here
+    
+    # For now, we'll keep all shares as default behavior
+    return True
+
+
 def is_interest_file(file, smb_client, share, no_download: bool, json_output=False):
     backup_ext_list = [".bak", ".mdf", ".sqldump", ".sdf", ".dmp"]
     cred_list = ["creds", "password", "passw", "credentials", "login", "secret", "account", "pass",
