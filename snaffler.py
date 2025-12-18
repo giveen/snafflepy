@@ -2,6 +2,7 @@ import argparse
 import sys
 import logging
 import os
+import json
 
 from snaffcore.go_snaffle import *
 from snaffcore.utilities import *
@@ -10,6 +11,8 @@ from snaffcore.logger import *
 log = logging.getLogger('snafflepy')
 log.setLevel(logging.INFO)
 
+# Global list to collect results for JSON output
+json_results = []
 
 def parse_arguments():
     syntax_error = False
@@ -40,6 +43,7 @@ def parse_arguments():
                         help="Disable computer discovery, requires a list of hosts to do discovery on")
     
     parser.add_argument("--no-download", action='store_true', help="Don't download files, just print found file names to stdout - this can only show the top level of files from the share and is unable to recurse into subdirectories.")
+    parser.add_argument("--json-output", type=str, help="Output results to JSON file instead of console")
 
     try:
         if len(sys.argv) <= 1:
@@ -88,13 +92,24 @@ O~~    O~~ O~~  O~~O~~   O~~   O~~    O~~   O~~O~        O~~           O~~
 def main():
     print_banner()
     snaffle_options = parse_arguments()
+    
+    # Initialize results list if JSON output is requested
+    global json_results
+    if snaffle_options.json_output:
+        json_results = []
+    
     begin_snaffle(snaffle_options)
+
+    # Write JSON results if requested
+    if snaffle_options.json_output:
+        try:
+            with open(snaffle_options.json_output, 'w') as f:
+                json.dump(json_results, f, indent=2)
+            print(f"Results written to {snaffle_options.json_output}")
+        except Exception as e:
+            log.error(f"Failed to write JSON file: {e}")
 
     print("\nI snaffled 'til the snafflin was done")
     print("View log file at ~/.snafflepy/logs/")
     print("Files snaffled from targets are available in <PATH-TO-SNAFFLEPY>/remotefiles/")
     sys.exit()
-
-
-if __name__ == '__main__':
-    main()
