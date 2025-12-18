@@ -85,7 +85,8 @@ def is_interest_file(file, smb_client, share, no_download: bool, json_output=Fal
                 json_results.append(result_entry)
                 
             try:
-                file.get(smb_client)
+                if not no_download:
+                    file.get(smb_client)
                 log.info(f"[File] {file_triage}")
             except FileRetrievalError as e:
                 file.handle_download_error(file.name, e, False, False)
@@ -117,9 +118,10 @@ def is_interest_file(file, smb_client, share, no_download: bool, json_output=Fal
             except FileRetrievalError as e:
                 file.handle_download_error(file.name, e, False, False)
 
-    file_data = ""
-    try:
-        if not no_download:
+    # Only check content when download is enabled
+    if not no_download:
+        file_data = ""
+        try:
             file.get(smb_client)
             with open(str(file.tmp_filename), 'rb') as f:
                 file_data = str(f.read(10000))
@@ -143,11 +145,16 @@ def is_interest_file(file, smb_client, share, no_download: bool, json_output=Fal
                 elif not is_interest:
                     # print(file.name)
                     os.remove(f"./{file.tmp_filename}")
-        else:
+        except FileRetrievalError as e:
+            os.remove(f"./{file.tmp_filename}")
+            file.handle_download_error(file.name, e, False, False)
+    else:
+        # When no download is requested, we still want to log filename-based matches
+        # but don't do content analysis since we can't read the file
+        if not is_interest:
+            # For files that aren't already marked as interesting by name,
+            # we don't add them to results when no-download is used
             pass
-    except FileRetrievalError as e:
-        os.remove(f"./{file.tmp_filename}")
-        file.handle_download_error(file.name, e, False, False)
 
 
 # TODO 
