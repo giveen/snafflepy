@@ -113,3 +113,8 @@ def main():
     print("View log file at ~/.snafflepy/logs/")
     print("Files snaffled from targets are available in <PATH-TO-SNAFFLEPY>/remotefiles/")
     sys.exit()
+
+
+if __name__ == "__main__":
+    main()
+
