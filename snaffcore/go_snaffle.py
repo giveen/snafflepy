@@ -9,9 +9,12 @@ from .errors import *
 
 log = logging.getLogger('snafflepy')
 
+# Global list to collect results for JSON output
+json_results = []
 
 def begin_snaffle(options):
-
+    global json_results  # Use the global variable
+    
     snaff_rules = Rules()
     snaff_rules.prepare_classifiers()
 
@@ -76,12 +79,23 @@ def begin_snaffle(options):
 
                     if options.go_loud:
                         try:
-                            file_text = termcolor.colored("[File]", 'green')
+                            # Instead of printing to console, collect in JSON format
                             if not options.no_download:
                                 file.get(smb_client)
-                            log.info(
-                                f"{file_text} \\\\{target}\\{share}\\{name}")
-
+                            
+                            result_entry = {
+                                "type": "file",
+                                "target": target,
+                                "share": share,
+                                "filename": name,
+                                "size": size,
+                                "action": "go_loud"
+                            }
+                            
+                            # Add to global results list
+                            if options.json_output:
+                                json_results.append(result_entry)
+                                
                         except FileRetrievalError as e:
                             no_add_error = False
                             keep_dir_name = True
@@ -94,7 +108,7 @@ def begin_snaffle(options):
                             pass
                         else:
                             try:
-                                is_interest_file(file, smb_client, share, options.no_download)
+                                is_interest_file(file, smb_client, share, options.no_download, options.json_output)
                             except FileRetrievalError as e:
                                 # Error will trigger if access denied to file, or the file is actually a directory
                                 # File 
@@ -107,8 +121,6 @@ def begin_snaffle(options):
                 log.error(f"Cannot list files at {share} {e}")
     
                 
-           
-
 def access_ldap_server(ip, username, password):
     # log.info("Accessing LDAP Server")
     server = Server(ip, get_info=DSA)
